@@ -95,7 +95,7 @@ app.get('/rss', async (req, res, next) => {
         const spinner = ora('开始获取最新更新电影列表...').start();
         const moviePageList = await getMoviePageList()
 
-        spinner.text = '\r开始获取电影列表里每个电影的磁力链接...'
+        spinner.text = '\n开始获取电影列表里每个电影的磁力链接...'
         const movies = await getMovies(moviePageList)
         console.log('movies磁力链接总共有 ', movies.length)
 

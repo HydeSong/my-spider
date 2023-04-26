@@ -3,7 +3,6 @@ const cheerio = require('cheerio')
 const fs = require('fs')
 const axios = require('axios')
 const rss = require('rss')
-const ora = require('ora')
 
 const app = express()
 const baseURL = 'https://www.mp4kan.com'
@@ -17,7 +16,7 @@ async function getMoviePageList() {
         const moviePageList = []
 
         // 获取每个电影页面的链接
-        $('.index_update .list-group-item a').each((index, element) => {
+        $('.list-group-item a').each((index, element) => {
             const movieUrl = `${baseURL}${$(element).attr('href')}`
             moviePageList.push(movieUrl)
         })
@@ -31,32 +30,30 @@ async function getMoviePageList() {
 // 爬取每个电影页面的磁力链接数据
 async function getMovies(moviePageList) {
     const movies = []
-
     for (const movieUrl of moviePageList) {
         try {
             const response = await axios.get(movieUrl)
+            console.log('movie url:', movieUrl)
             const $ = cheerio.load(response.data)
-
             // 获取电影详情
-            // const poster = $('.content .article-header pic img').attr('src')
-            const description = $('.content .info p').text()
-            const date = new Date()
-            // 获取磁力链接
-            $('.down-list li .url-left a').each((index, element) => {
-                const $element = $(element)
-                const title = $element.attr('title').replace('磁力链下载', '').replace('电驴下载', '')
-                console.log('title:', title)
-                const url = $element.attr('href')
-                if (url && url.includes('magnet')) {
-                    movies.push({
-                        title,
-                        description,
-                        url,
-                        date
-                    })
-                }
-            })
+            let magnetNodeList = $('.url-left a:last-of-type')
 
+            console.log('此页面磁力链接总共有：', magnetNodeList.length)
+            // 获取磁力链接
+            if (magnetNodeList.length > 0) {
+                magnetNodeList.each((index, element) => {
+                    const $element = $(element)
+                    const title = $element.attr('title').replace('磁力链下载', '').replace('电驴下载', '')
+                    console.log('title:', title)
+                    const url = $element.attr('href')
+                    if (url && url.includes('magnet')) {
+                        movies.push({
+                            title,
+                            url
+                        })
+                    }
+                })
+            }
         } catch (error) {
             console.error(error)
         }
@@ -79,9 +76,7 @@ function generateRSS(items) {
     for (const item of items) {
         feed.item({
             title: item.title,
-            description: item.description,
             url: item.url,
-            date: item.date,
         })
     }
 
@@ -92,24 +87,23 @@ function generateRSS(items) {
 
 app.get('/rss', async (req, res, next) => {
     try {
-        const spinner = ora('开始获取最新更新电影列表...').start();
+        console.log('开始获取最新更新电影列表...')
         const moviePageList = await getMoviePageList()
-
-        spinner.text = '\r开始获取电影列表里每个电影的磁力链接...'
+        console.log('最新更新电影总共有:', moviePageList.length)
+        console.log('开始获取电影列表里每个电影的磁力链接...\n')
         const movies = await getMovies(moviePageList)
-        console.log('movies磁力链接总共有 ', movies.length)
+        console.log('movies磁力链接总共有:', movies.length)
 
-        spinner.text = '开始生成rss...'
+        console.log('开始生成rss...')
         const xml = generateRSS(movies)
 
-        spinner.text = '开始把rss保存为文件...'
+        console.log('开始把rss保存为文件...')
         fs.writeFileSync('rss.xml', xml)
 
-        spinner.text = '开始发送rss文件到客户端...'
+        console.log('开始发送rss文件到客户端...')
         res.setHeader('Content-Type', 'text/xml; charset=UTF-8')
         res.send(xml)
 
-        spinner.stop()
         console.log('今日更新电影磁力链接获取成功')
     } catch (err) {
         console.log('error....', err)

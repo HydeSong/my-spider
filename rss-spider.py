@@ -29,7 +29,7 @@ soup = BeautifulSoup(html_content, 'html.parser')
 # Find all the movie links on the page
 # 查找 li.list-group-item 标签
 li_tags = soup.find_all('li', attrs={'class': 'list-group-item'})
-# 遍历 div 标签，并查找其中的 a 标签
+# 遍历 li 标签，并查找其中的 a 标签
 movie_links = []
 for li in li_tags:
     a_tag = li.find('a')

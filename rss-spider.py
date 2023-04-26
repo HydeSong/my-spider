@@ -37,8 +37,6 @@ for li in li_tags:
         a_tag['href'] = baseURL + a_tag['href']
         movie_links.append(a_tag)
 
-logging.info('获取的最新电影列表如下：')
-logging.info(movie_links)
 logging.info('最新更新电影总共有:')
 logging.info(len(movie_links))
 
@@ -76,7 +74,7 @@ logging.info(len(rssItems))
 
 rss = PyRSS2Gen.RSS2(
 	title = "Movie RSS Feed", 
-	link = 'https://www.example.com/rss',
+	link = 'https://feeek.com:8920/rss.xml',
 	description = "Get updates from www.mp4kan.com/custom/update.html", 
 	lastBuildDate = datetime.datetime.now(),
 	items = rssItems
